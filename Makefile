@@ -13,6 +13,10 @@ endif
 
 LD_FLAGS = -X github.com/tendermint/tendermint/version.TMVersion=$(VERSION)
 BUILD_FLAGS = -mod=readonly -ldflags "$(LD_FLAGS)"
+HTTPS_GIT := https://github.com/tendermint/tendermint.git
+BUILD_IMAGE := ghcr.io/tendermint/docker-build-proto
+BASE_BRANCH := v0.35.x
+DOCKER_PROTO := docker run -v $(shell pwd):/workspace --workdir /workspace $(BUILD_IMAGE)
 CGO_ENABLED ?= 0
 
 # handle nostrip
@@ -76,6 +80,9 @@ $(BUILDDIR)/:
 ###                                Protobuf                                 ###
 ###############################################################################
 
+proto-all: proto-gen proto-lint proto-check-breaking
+.PHONY: proto-all
+
 check-proto-deps:
 ifeq (,$(shell which protoc-gen-gogofaster))
 	$(error "gogofaster plugin for protoc is required. Run 'go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest' to install")
@@ -101,9 +108,9 @@ proto-lint: check-proto-deps
 	@go run github.com/bufbuild/buf/cmd/buf lint
 .PHONY: proto-lint
 
-proto-format: check-proto-format-deps
-	@echo "Formatting Protobuf files"
-	@find . -name '*.proto' -path "./proto/*" -exec clang-format -i {} \;
+proto-format:
+	@echo "Formatting .proto files"
+	@$(DOCKER_PROTO) find ./ -not -path "./third_party/*" -name '*.proto' -exec clang-format -i {} \;
 .PHONY: proto-format
 
 proto-check-breaking: check-proto-deps
@@ -169,7 +176,7 @@ go.sum: go.mod
 
 draw_deps:
 	@# requires brew install graphviz or apt-get install graphviz
-	go install github.com/RobotsAndPencils/goviz@latest
+	go get github.com/RobotsAndPencils/goviz
 	@goviz -i github.com/tendermint/tendermint/cmd/tendermint -d 3 | dot -Tpng -o dependency-graph.png
 .PHONY: draw_deps
 
@@ -223,8 +230,7 @@ DESTINATION = ./index.html.md
 build-docs:
 	@cd docs && \
 	while read -r branch path_prefix; do \
-		( git checkout $${branch} && npm ci --quiet && \
-			VUEPRESS_BASE="/$${path_prefix}/" npm run build --quiet ) ; \
+		(git checkout $${branch} && npm ci && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
 		mkdir -p ~/output/$${path_prefix} ; \
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
@@ -247,21 +253,6 @@ build-docker:
 mockery:
 	go generate -run="./scripts/mockery_generate.sh" ./...
 .PHONY: mockery
-
-###############################################################################
-###                               Metrics                                   ###
-###############################################################################
-
-metrics: testdata-metrics
-	go generate -run="scripts/metricsgen" ./...
-.PHONY: metrics
-
-	# By convention, the go tool ignores subdirectories of directories named
-	# 'testdata'. This command invokes the generate command on the folder directly
-	# to avoid this.
-testdata-metrics:
-	ls ./scripts/metricsgen/testdata | xargs -I{} go generate -run="scripts/metricsgen" ./scripts/metricsgen/testdata/{}
-.PHONY: testdata-metrics
 
 ###############################################################################
 ###                       Local testnet using docker                        ###
@@ -287,12 +278,12 @@ build_c-amazonlinux:
 # Run a 4-node testnet locally
 localnet-start: localnet-stop build-docker-localnode
 	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/tendermint:Z tendermint/localnode testnet --config /etc/tendermint/config-template.toml --o . --starting-ip-address 192.167.10.2; fi
-	docker-compose up
+	docker compose up
 .PHONY: localnet-start
 
 # Stop testnet
 localnet-stop:
-	docker-compose down
+	docker compose down
 .PHONY: localnet-stop
 
 # Build hooks for dredd, to skip or add information on some steps
@@ -347,4 +338,4 @@ $(BUILDDIR)/packages.txt:$(GO_TEST_FILES) $(BUILDDIR)
 split-test-packages:$(BUILDDIR)/packages.txt
 	split -d -n l/$(NUM_SPLIT) $< $<.
 test-group-%:split-test-packages
-	cat $(BUILDDIR)/packages.txt.$* | xargs go test -mod=readonly -timeout=5m -race -coverprofile=$(BUILDDIR)/$*.profile.out
+	cat $(BUILDDIR)/packages.txt.$* | xargs go test -mod=readonly -timeout=15m -race -coverprofile=$(BUILDDIR)/$*.profile.out
