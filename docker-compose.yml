@@ -6,9 +6,10 @@ services:
     image: "tendermint-app"
     ports:
       - "26658"
+      - "8088"
     build:
       context: .
-      dockerfile: ../xnode/Dockerfile
+      dockerfile: ../xnode-app/Dockerfile
     networks:
       localnet:
         ipv4_address: 192.167.10.6
@@ -18,9 +19,10 @@ services:
     image: "tendermint-app"
     ports:
       - "26658"
+      - "8088"
     build:
       context: .
-      dockerfile: ../xnode/Dockerfile
+      dockerfile: ../xnode-app/Dockerfile
     networks:
       localnet:
         ipv4_address: 192.167.10.7
@@ -30,9 +32,10 @@ services:
     image: "tendermint-app"
     ports:
       - "26658"
+      - "8088"
     build:
       context: .
-      dockerfile: ../xnode/Dockerfile
+      dockerfile: ../xnode-app/Dockerfile
     networks:
       localnet:
         ipv4_address: 192.167.10.8
@@ -42,9 +45,10 @@ services:
     image: "tendermint-app"
     ports:
       - "26658"
+      - "8088"
     build:
       context: .
-      dockerfile: ../xnode/Dockerfile
+      dockerfile: ../xnode-app/Dockerfile
     networks:
       localnet:
         ipv4_address: 192.167.10.9
@@ -110,6 +114,50 @@ services:
     networks:
       localnet:
         ipv4_address: 192.167.10.5
+
+  xnode0:
+    container_name: xnode0
+    image: "xnode"
+    build:
+      context: .
+      dockerfile: ../data-mock/Dockerfile
+    command: data-provider.js 192.167.10.6 http://192.167.10.2:26657 # abci0 node0
+    networks:
+      localnet:
+        ipv4_address: 192.167.10.10
+
+  xnode1:
+    container_name: xnode1
+    image: "xnode"
+    build:
+      context: .
+      dockerfile: ../data-mock/Dockerfile
+    command: data-provider.js 192.167.10.7 http://192.167.10.3:26657 # abci1 node1
+    networks:
+      localnet:
+        ipv4_address: 192.167.10.11
+
+  xnode2:
+    container_name: xnode2
+    image: "xnode"
+    build:
+      context: .
+      dockerfile: ../data-mock/Dockerfile
+    command: data-provider.js 192.167.10.8 http://192.167.10.4:26657 # abci2 node2
+    networks:
+      localnet:
+        ipv4_address: 192.167.10.12
+
+  xnode3:
+    container_name: xnode3
+    image: "xnode"
+    build:
+      context: .
+      dockerfile: ../data-mock/Dockerfile
+    command: data-provider.js 192.167.10.9 http://192.167.10.5:26657 # abci3 node3
+    networks:
+      localnet:
+        ipv4_address: 192.167.10.13
 
 networks:
   localnet:
