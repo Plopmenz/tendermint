@@ -7,9 +7,12 @@ services:
     ports:
       - "26658"
       - "8088"
+    volumes:
+      - ./build:/tendermint:Z
     build:
       context: .
       dockerfile: ../xnode-app/Dockerfile
+    command: /tendermint-app node0/config/genesis.json
     networks:
       localnet:
         ipv4_address: 192.167.10.6
@@ -20,9 +23,12 @@ services:
     ports:
       - "26658"
       - "8088"
+    volumes:
+      - ./build:/tendermint:Z
     build:
       context: .
       dockerfile: ../xnode-app/Dockerfile
+    command: /tendermint-app node1/config/genesis.json
     networks:
       localnet:
         ipv4_address: 192.167.10.7
@@ -33,9 +39,12 @@ services:
     ports:
       - "26658"
       - "8088"
+    volumes:
+      - ./build:/tendermint:Z
     build:
       context: .
       dockerfile: ../xnode-app/Dockerfile
+    command: /tendermint-app node2/config/genesis.json
     networks:
       localnet:
         ipv4_address: 192.167.10.8
@@ -46,9 +55,12 @@ services:
     ports:
       - "26658"
       - "8088"
+    volumes:
+      - ./build:/tendermint:Z
     build:
       context: .
       dockerfile: ../xnode-app/Dockerfile
+    command: /tendermint-app node3/config/genesis.json
     networks:
       localnet:
         ipv4_address: 192.167.10.9
