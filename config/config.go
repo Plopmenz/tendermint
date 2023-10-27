@@ -788,8 +788,8 @@ func DefaultP2PConfig() *P2PConfig {
 		// Ethernet is 1500 - 20 -20 = 1460
 		// Source: https://stackoverflow.com/a/3074427/820520
 		MaxPacketMsgPayloadSize: 1400,
-		SendRate:                5120000, // 5 mB/s
-		RecvRate:                5120000, // 5 mB/s
+		SendRate:                100 * 5120000, // edited: originally 5120000 // 5 mB/s
+		RecvRate:                100 * 5120000, // edited: originally 5120000 // 5 mB/s
 		PexReactor:              true,
 		AllowDuplicateIP:        false,
 		HandshakeTimeout:        20 * time.Second,
@@ -1158,7 +1158,7 @@ func DefaultConsensusConfig() *ConsensusConfig {
 		TimeoutPrecommitDelta:       500 * time.Millisecond,
 		TimeoutCommit:               1000 * time.Millisecond,
 		SkipTimeoutCommit:           false,
-		CreateEmptyBlocks:           true,
+		CreateEmptyBlocks:           false, // edited: originally true
 		CreateEmptyBlocksInterval:   0 * time.Second,
 		PeerGossipSleepDuration:     100 * time.Millisecond,
 		PeerQueryMaj23SleepDuration: 2000 * time.Millisecond,
